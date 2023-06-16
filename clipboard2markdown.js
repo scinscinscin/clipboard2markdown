@@ -5,14 +5,17 @@
   var pandoc = [
     {
       filter: ["strong", "b"],
-      replacement: (content, node) => content.replaceAll("\\", ""),
+      replacement: (content, node) => {
+        if (["H1", "H2", "H3", "H4", "H5", "H6"].includes(node.parentNode.nodeName)) return content;
+        return "**" + content + "**";
+      },
     },
 
     {
       filter: "h1",
-      replacement: function (content, node) {
-        console.log("now this is being called");
-        return "\n\n# " + content + "\n\n";
+      replacement: function (content, ...rest) {
+        console.log("now this is being called", rest);
+        return "\n\n# " + content.replaceAll("\\", "") + "\n\n";
       },
     },
 
@@ -143,7 +146,6 @@
   };
 
   var convert = function (str) {
-    console.log({ str });
     return escape(toMarkdown(str, { converters: pandoc, gfm: true }));
   };
 
@@ -195,7 +197,10 @@
         // output.value = markdown;
         insert(output, markdown);
         wrapper.classList.remove("hidden");
-        // navigator.clipboard.writeText(markdown);
+        if (globalThis.automatic == true) {
+          console.log("setting clipboard!");
+          navigator.clipboard.writeText(markdown);
+        }
         output.focus();
         output.select();
       }, 200);
